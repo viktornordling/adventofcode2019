@@ -1,7 +1,5 @@
 package d04
 
-data class Steps(val color: Char, val steps: Int)
-
 object Solution {
     fun solve() {
 //        val input = Reader.readInput("easy.txt")
