@@ -68,10 +68,8 @@ object Solution {
                 }
             }
         }
-//        Surface.printMap(board)
         println(intersections.min())
     }
-
 }
 
 fun main() {

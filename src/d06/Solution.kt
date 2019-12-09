@@ -4,7 +4,6 @@ import util.Reader
 
 // a is orbited by b
 data class Orbit(val a: String, val b: String)
-data class PlanetWithParents(val a: String, val parents: Int)
 
 object Solution {
     fun solve() {

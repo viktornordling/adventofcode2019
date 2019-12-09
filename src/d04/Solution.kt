@@ -74,13 +74,6 @@ object Solution {
 
 fun main() {
     val start = System.currentTimeMillis()
-//    Solution.solve()
-//    val list = listOf(1, 2, 3, 3, 4, 4, 4, 5)
-//    val windows = list.windowed(2).map { it -> it }
-//    println(windows)
+    Solution.solve()
     println("Millis taken: ${System.currentTimeMillis() - start}")
-    val s = """gHHH5YY++///\"""
-    val map = s.groupBy { it }.values.map { String(it.toCharArray()) }.joinToString(separator = ", ")
-    println(map)
-    println("")
 }

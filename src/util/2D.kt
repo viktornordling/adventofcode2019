@@ -15,7 +15,7 @@ object Surface {
             for (x in minX..maxX) {
                 val cur = map.get(Pos(x, y))
                 if (cur == null) {
-                    print('#')
+                    print(' ')
                 } else {
                     print(cur)
                 }

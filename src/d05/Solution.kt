@@ -20,7 +20,6 @@ object Solution {
             val opCode = getOpCode(op)
             val mode1 = getMode(op, 1)
             val mode2 = getMode(op, 2)
-            val mode3 = getMode(op, 3)
             if (opCode == 1) {
                 val addr1 = values[currentPos + 1]
                 val addr2 = values[currentPos + 2]
@@ -69,7 +68,6 @@ object Solution {
                 val addr3 = values[currentPos + 3]
                 val a = getValue(addr1, values, mode1)
                 val b = getValue(addr2, values, mode2)
-//                val dest = values[currentPos + 3]
                 val dest = addr3
                 if (a < b) {
                     values[dest] = 1
@@ -82,7 +80,6 @@ object Solution {
                 val addr3 = values[currentPos + 3]
                 val a = getValue(addr1, values, mode1)
                 val b = getValue(addr2, values, mode2)
-//                val dest = values[currentPos + 3]
                 val dest = addr3
                 if (a == b) {
                     values[dest] = 1
@@ -127,16 +124,6 @@ object Solution {
 
 fun main() {
     val start = System.currentTimeMillis()
-//    println(Solution.getOpCode(199))
-//    println(Solution.getOpCode(101))
-//    println(Solution.getOpCode(102))
-//    println(Solution.getMode(1002, 1)) // => 0
-//    println(Solution.getMode(1002, 2)) // => 1
-//    println(Solution.getMode(1002, 3)) // => 0
-//
-//    println(Solution.getMode(11002, 1)) // => 0
-//    println(Solution.getMode(11002, 2)) // => 1
-//    println(Solution.getMode(11002, 3)) // => 1
 
     Solution.solve()
     println("Millis taken: ${System.currentTimeMillis() - start}")
