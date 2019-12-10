@@ -40,7 +40,7 @@ object Solution {
             val zappable = mutableSetOf<Sighting>()
             for (groupedSighting: Map.Entry<Double, List<Sighting>> in groupedSightings) {
                 val filtered = groupedSighting.value.filter { !zappedA.contains(it.otherAsteroid) }
-                val first: Sighting? = filtered.sortedBy { it.dist }.firstOrNull()
+                val first: Sighting? = filtered.minBy { it.dist }
 
                 if (first != null) {
                     zappable.add(first)
@@ -58,29 +58,24 @@ object Solution {
     }
 
     private fun getAngle(a1: Asteroid, a2: Asteroid): Double {
-        val x = a2.x - a1.x
-        val y = a1.y - a2.y
+        val xDiff = a2.x - a1.x
+        val yDiff = a1.y - a2.y
 
-        val aa = when {
-            y < 0 && x >= 0 -> 180 - atan(x.toDouble() / (y.toDouble() * -1.0)) * (180 / Math.PI)
-            x < 0 && y <  0 -> 270 - atan(x.toDouble() * -1.0 / (y.toDouble() * -1.0)) * (180 / Math.PI)
-            x < 0 && y >= 0 -> 360 - atan(x.toDouble() / (y.toDouble() * -1.0)) * (180 / Math.PI)
-            else -> atan(x.toDouble() / y.toDouble()) * (180 / Math.PI)
+        return when {
+            yDiff < 0 && xDiff >= 0 -> 180 - atan(xDiff.toDouble() / (yDiff.toDouble() * -1.0)) * (180 / Math.PI)
+            xDiff < 0 && yDiff <  0 -> 270 - atan(xDiff.toDouble() * -1.0 / (yDiff.toDouble() * -1.0)) * (180 / Math.PI)
+            xDiff < 0 && yDiff >= 0 -> 360 - atan(xDiff.toDouble() / (yDiff.toDouble() * -1.0)) * (180 / Math.PI)
+            else -> atan(xDiff.toDouble() / yDiff.toDouble()) * (180 / Math.PI)
         }
-        if (aa < 0) {
-            return 360 + aa
-        }
-        return aa
     }
 
-    fun countVisibleStars(asteroid: Asteroid, asteroidToSightings: MutableMap<Asteroid, MutableList<Sighting>>): Int {
+    private fun countVisibleStars(asteroid: Asteroid, asteroidToSightings: MutableMap<Asteroid, MutableList<Sighting>>): Int {
         val sightings: MutableList<Sighting> = asteroidToSightings[asteroid].orEmpty().toMutableList()
         val groupedSightings: Map<Fraction, List<Sighting>> = sightings.groupBy { it.angle }
-        val visibleStars = groupedSightings.keys.size
-        return visibleStars
+        return groupedSightings.keys.size
     }
 
-    fun dist(a1: Asteroid, a2: Asteroid): Int {
+    private fun dist(a1: Asteroid, a2: Asteroid): Int {
         val xDiff = abs(a1.x - a2.x)
         val yDiff = abs(a1.y - a2.y)
         return xDiff + yDiff
