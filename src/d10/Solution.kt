@@ -11,7 +11,7 @@ data class Sighting(val angle: Fraction, val dist: Int, val otherAsteroid: Aster
 
 object Solution {
     fun solve() {
-        val input = Reader.readInput("easy.txt")
+        val input = Reader.readInput("input.txt")
         val asteroids: List<Asteroid> = input.mapIndexed { row, line ->
             line.mapIndexed { col, char -> if (char != '.') Asteroid(col, row) else null }.filterNotNull()
         }.flatten()
@@ -63,7 +63,7 @@ object Solution {
 
         val aa = when {
             y < 0 && x >= 0 -> 180 - atan(x.toDouble() / (y.toDouble() * -1.0)) * (180 / Math.PI)
-            x < 0 && y <  0 -> 270 - atan(x.toDouble()*-1.0 / (y.toDouble() * -1.0)) * (180 / Math.PI)
+            x < 0 && y <  0 -> 270 - atan(x.toDouble() * -1.0 / (y.toDouble() * -1.0)) * (180 / Math.PI)
             x < 0 && y >= 0 -> 360 - atan(x.toDouble() / (y.toDouble() * -1.0)) * (180 / Math.PI)
             else -> atan(x.toDouble() / y.toDouble()) * (180 / Math.PI)
         }
