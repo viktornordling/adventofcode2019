@@ -2,6 +2,8 @@ package d09
 
 import util.Reader
 import java.math.BigInteger
+import java.util.*
+
 
 object Solution {
     fun solve() {
@@ -129,7 +131,6 @@ object Solution {
                 currentPos = currentPos.plus(BigInteger.valueOf(jumps.toLong()))
             }
         }
-        return -1
     }
 
     fun getMode(op: BigInteger, num: Int): Int {
