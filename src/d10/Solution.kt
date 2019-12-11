@@ -6,7 +6,7 @@ import kotlin.math.abs
 import kotlin.math.atan
 
 data class Asteroid(val x: Int, val y: Int)
-data class Fraction(val x: Int, val y: Int, val gcd: Boolean)
+data class Fraction(val x: Int, val y: Int, val isGcdPositive: Boolean)
 data class Sighting(val angle: Fraction, val dist: Int, val otherAsteroid: Asteroid, val realAngle:Double)
 
 object Solution {
@@ -69,7 +69,7 @@ object Solution {
         }
     }
 
-    private fun countVisibleStars(asteroid: Asteroid, asteroidToSightings: MutableMap<Asteroid, MutableList<Sighting>>): Int {
+    private fun countVisibleStars(asteroid: Asteroid, asteroidToSightings: Map<Asteroid, List<Sighting>>): Int {
         val sightings: MutableList<Sighting> = asteroidToSightings[asteroid].orEmpty().toMutableList()
         val groupedSightings: Map<Fraction, List<Sighting>> = sightings.groupBy { it.angle }
         return groupedSightings.keys.size
@@ -85,10 +85,7 @@ object Solution {
         val xDiff = a1.x - a2.x
         val yDiff = a1.y - a2.y
         val d: Int = gcd(xDiff, yDiff)
-        return when {
-            d != 0 -> Fraction(xDiff / d, yDiff / d, d > 0)
-            else -> Fraction(xDiff, yDiff, d > 0)
-        }
+        return Fraction(xDiff / d, yDiff / d, d > 0)
     }
 }
 
