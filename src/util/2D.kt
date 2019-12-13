@@ -22,6 +22,5 @@ object Surface {
             }
             println()
         }
-
     }
 }

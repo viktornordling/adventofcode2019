@@ -2,7 +2,6 @@ package d09
 
 import util.Reader
 import java.math.BigInteger
-import java.util.*
 
 
 object Solution {
