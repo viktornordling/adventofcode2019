@@ -1,8 +1,8 @@
 package util
 
-import java.math.BigInteger
-
-data class Pos(val x: Int, val y: Int)
+data class Pos(val x: Int, val y: Int) {
+    fun neighbours(): Set<Pos> = setOf(this.copy(x=this.x+1), this.copy(x=this.x-1), this.copy(y=this.y+1), this.copy(y=this.y-1))
+}
 
 object Surface {
     fun printMap(map: Map<Pos, Char>) {
