@@ -2,6 +2,7 @@ package d14
 
 import util.Reader
 import java.math.BigInteger
+import java.math.RoundingMode
 
 data class Quantity(val element:String, val quantity: Int)
 data class Reaction(val inputs: List<Quantity>, val output: Quantity)
@@ -16,45 +17,79 @@ object Solution {
         val elements: List<String> = reactions.flatMap { it.inputs.map { it.element }} + "FUEL"
         val elementToReactions = reactions.groupBy { it.output.element }
         val cheapestReactions: Map<String, CheapestReaction> = elements.map { it to findCheapestReaction(it, elementToReactions) }.toMap()
-        calcElementAmountsNeeded(cheapestReactions)
+        var low =  3000099.toBigInteger()
+        var high = 4000099.toBigInteger()
+        var oreNeeded = BigInteger("1000000000000")
+        var count = 0
+        while (low < high) {
+            val middle = low + (high - low) / 2.toBigInteger()
+            val calcElementAmountsNeeded = calcElementAmountsNeeded(cheapestReactions, middle)
+//            println("Fuel needed for $middle: $calcElementAmountsNeeded")
+            if (calcElementAmountsNeeded > oreNeeded) {
+                high = middle
+            } else {
+                low = middle
+            }
+            count++
+            if (count == 1000) {
+                println("low $low high $high")
+                return
+            }
+        }
+
     }
 
-    private fun calcElementAmountsNeeded(cheapestReactions: Map<String, CheapestReaction>) {
+    private fun calcElementAmountsNeeded(cheapestReactions: Map<String, CheapestReaction>, fuel: BigInteger): BigInteger {
         val elementsToProduce = mutableMapOf<String, BigInteger>()
-        elementsToProduce["FUEL"] = 400000.toBigInteger()
+        elementsToProduce["FUEL"] = fuel
         val availableElements = mutableMapOf<String, BigInteger>()
         var oreUsed = BigInteger.ZERO
         while (!elementsToProduce.isEmpty()) {
+//            println(elementsToProduce)
             val element = elementsToProduce.keys.first()
             val reaction = cheapestReactions[element]!!
-            val amountToProduce = elementsToProduce[element]!!
+            val amountAvailable = availableElements[element] ?: 0.toBigInteger()
+            val amountWanted = elementsToProduce[element] !!
+            val amountToProduce = amountWanted - amountAvailable
 //            println("We need $amountToProduce $element")
-            var amountAvailable = availableElements[element] ?: 0.toBigInteger()
-            if (amountAvailable >= amountToProduce) {
+            if (amountToProduce <= 0.toBigInteger()) {
 //                println("Not running reaction, we already have enough")
-                availableElements[element] = (amountAvailable - amountToProduce)
+                availableElements[element] = amountAvailable - amountWanted
             } else {
-                while (amountAvailable < amountToProduce) {
-//                    println("Running reaction ${reaction.reaction}")
-                    if (reaction.reaction.inputs.size == 1 && reaction.reaction.inputs[0].element == "ORE") {
-//                        println("Running raw reaction, consuming ${reaction.reaction.inputs[0].quantity} ORE")
-                        oreUsed += reaction.reaction.inputs[0].quantity.toBigInteger()
-                    } else {
-                        for (r in reaction.reaction.inputs) {
-                            val new = (elementsToProduce[r.element] ?: 0.toBigInteger()) + r.quantity.toBigInteger()
-                            elementsToProduce[r.element] = new
-                        }
+                val a = amountToProduce.toBigDecimal()
+                val q = reaction.reaction.output.quantity.toBigInteger().toBigDecimal()
+//                println("Calculating $a / $q")
+                val runsNeeded = a.divide(q, RoundingMode.UP).toBigInteger()
+//                while (amountAvailable < amountToProduce) {
+//                println("Running reaction ${reaction.reaction} $runsNeeded times")
+                if (reaction.reaction.inputs.size == 1 && reaction.reaction.inputs[0].element == "ORE") {
+//                    println("Using ${reaction.reaction.inputs[0].quantity.toBigInteger() * runsNeeded} ore")
+                    oreUsed += reaction.reaction.inputs[0].quantity.toBigInteger() * runsNeeded
+                } else {
+                    for (r in reaction.reaction.inputs) {
+                        val curElementToProduce = (elementsToProduce[r.element] ?: 0.toBigInteger())
+                        val neededInThisRun = r.quantity.toBigInteger() * runsNeeded
+//                            val new = (elementsToProduce[r.element] ?: 0.toBigInteger()) + r.quantity.toBigInteger()
+                        elementsToProduce[r.element] = curElementToProduce + neededInThisRun
                     }
-                    val new = (availableElements[reaction.reaction.output.element] ?: 0.toBigInteger()) + reaction.reaction.output.quantity.toBigInteger()
-                    availableElements[reaction.reaction.output.element] = new
-                    amountAvailable += reaction.reaction.output.quantity.toBigInteger()
+//                    val newA = (availableElements[reaction.reaction.output.element] ?: 0.toBigInteger()) + reaction.reaction.output.quantity.toBigInteger() * runsNeeded
+//                    amountAvailable += reaction.reaction.output.quantity.toBigInteger()
+//                }
                 }
-                val new = (availableElements[element] ?: 0.toBigInteger()) - amountToProduce
+                val newAvailable = amountAvailable + reaction.reaction.output.quantity.toBigInteger() * runsNeeded
+//                println("Adding ${reaction.reaction.output.quantity.toBigInteger() * runsNeeded} $element")
+                availableElements[element] = newAvailable
+//                println("Available $availableElements")
+
+//                println("Using $amountWanted $element")
+                val new = (availableElements[element] ?: 0.toBigInteger()) - amountWanted
                 availableElements[element] = new
+//                println("Available: $availableElements")
             }
             elementsToProduce.remove(element)
         }
         println("Total ore used $oreUsed")
+        return oreUsed
     }
 
     fun findCheapestReaction(it: String, allReactions: Map<String, List<Reaction>>): CheapestReaction {
@@ -91,6 +126,10 @@ object Solution {
 
 fun main() {
     val start = System.currentTimeMillis()
+//    val a = 37.toBigDecimal()
+//    val q = 5.toBigDecimal()
+//    val needed = (a.divide(q, RoundingMode.UP))
+//    println("a = $a q = $q needed: $needed")
 
     Solution.solve()
     println("Millis taken: ${System.currentTimeMillis() - start}")
