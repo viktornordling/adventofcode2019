@@ -6,7 +6,7 @@ object Solution {
     fun solve() {
         val input = Reader.readInput("input.txt")
         val values = input.flatMap { it.split(",").map { it.toInt() } }
-        val solutionA = runProgramWithInput(values, 5)
+        val solutionA = runProgramWithInput(values, 1)
         println("Solution for A: $solutionA")
     }
 

@@ -317,7 +317,7 @@ object IntCode {
         visited.add(start)
 
         var minutes = 0
-        while (isNotOxygenEverywhere(map)) {
+        while (!isOxygenEverywhere(map)) {
             minutes++
             val oldFrontier = mutableSetOf<Pos>()
             oldFrontier.addAll(frontier)
@@ -335,20 +335,11 @@ object IntCode {
         println("Filled with oxygen in $minutes minutes.")
     }
 
-    fun isNotOxygenEverywhere(map: MutableMap<Pos, Char>): Boolean {
-        return !map.values.none { it == '.' }
-    }
+    fun isOxygenEverywhere(map: MutableMap<Pos, Char>) = map.values.none { it == '.' }
 
-    fun realNeighbours(pos: Pos, map: MutableMap<Pos, Char>):Set<Pos> {
-        val opens = pos.neighbours().filter { isReallyOpen(it, map) }
-        return opens.toSet()
-    }
+    fun realNeighbours(pos: Pos, map: MutableMap<Pos, Char>): List<Pos> = pos.neighbours().filter { isReallyOpen(it, map) }
 
-    private fun isReallyOpen(pos: Pos, map: MutableMap<Pos, Char>): Boolean {
-        // Consider a position open if it's not a wall _and_ it has one surrounding known pos
-        val open = map[pos] != '#' && map[pos] != null
-        return open
-    }
+    private fun isReallyOpen(pos: Pos, map: MutableMap<Pos, Char>) = map[pos] != '#' && map[pos] != null
 }
 
 fun main() {

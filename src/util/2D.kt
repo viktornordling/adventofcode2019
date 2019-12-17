@@ -2,6 +2,15 @@ package util
 
 data class Pos(val x: Int, val y: Int) {
     fun neighbours(): Set<Pos> = setOf(this.copy(x=this.x+1), this.copy(x=this.x-1), this.copy(y=this.y+1), this.copy(y=this.y-1))
+    fun next(direction: Char): Pos {
+        return when (direction) {
+            'R' -> return this.copy(x=this.x+1)
+            'L' -> this.copy(x=this.x-1)
+            'D' -> this.copy(y=this.y+1)
+            'U' -> return this.copy(y=this.y-1)
+            else -> throw IllegalArgumentException("Bad direction $direction")
+        }
+    }
 }
 
 object Surface {
