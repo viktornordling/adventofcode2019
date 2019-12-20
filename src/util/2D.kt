@@ -13,6 +13,10 @@ data class Pos(val x: Int, val y: Int) {
     }
 }
 
+data class Pos3(val x: Int, val y: Int, val level: Int = 0) {
+    fun neighbours(): Set<Pos3> = setOf(this.copy(x=this.x+1), this.copy(x=this.x-1), this.copy(y=this.y+1), this.copy(y=this.y-1))
+}
+
 object Surface {
     fun printMap(map: Map<Pos, Char>) {
         val minX = map.keys.minBy { it.x }!!.x - 1
