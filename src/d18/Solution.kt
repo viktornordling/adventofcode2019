@@ -12,6 +12,7 @@ data class Dependency(val key: Key, val neededKeys: Set<Key>)
 object Solution {
 
     val globalCheapest: MutableMap<Pair<Pos, Set<Key>>, Pair<Int, Int>> = mutableMapOf()
+    val globalCheapestKeyCount: MutableMap<Int, Int> = mutableMapOf()
     var globalCounter = BigInteger.ZERO
 
     fun solve() {
@@ -46,9 +47,10 @@ object Solution {
         curPos: Pos, curCost: Int,
         cheapestFoundSoFar: Int): Int {
         globalCounter++
-        if (globalCounter % 100000.toBigInteger() == 0.toBigInteger()) {
-            println("10k iterations. Current keys in hand: ${keysInHand.map { it.key }.sorted()}. Current pos: ${curPos} Best so far: ${cheapestFoundSoFar}")
-            println("10k iterations. Current keys in hand in order: ${keysInHand.map { it.key }}. Current pos: ${curPos} Best so far: ${cheapestFoundSoFar}")
+        val keysInHandAsChars = keysInHand.map { it.key }.toSet()
+        if (globalCounter % 1000.toBigInteger() == 0.toBigInteger()) {
+            println("1000 iterations. Current keys in hand: ${keysInHand.map { it.key }.sorted()}. Current pos: ${curPos} Best so far: ${cheapestFoundSoFar}")
+            println("1000 iterations. Current keys in hand in order: ${keysInHand.map { it.key }}. Current pos: ${curPos} Best so far: ${cheapestFoundSoFar}")
         }
         val existingValue = globalCheapest[Pair(curPos, keysInHand.toSet())]
         if (!keysInHand.isEmpty() && existingValue != null) {
@@ -69,7 +71,7 @@ object Solution {
 //        if (curCost == 136) {
 //            return curCost
 //        }
-        if (curCost > cheapestFoundSoFar) {
+        if (curCost >= cheapestFoundSoFar) {
             return cheapestFoundSoFar
         }
         if (keysInHand.size == allKeys.size) {
@@ -100,6 +102,7 @@ object Solution {
 
 //        val keyToShortest = mutableMapOf<Key, Int>()
 //        for (key in sorted) {
+        println("We have ${keysWithNoDeps.size} keys we can grab")
         for (key in keysWithNoDeps) {
             if (keysInHand.map { it.key }.toSet() == setOf('a', 'b', 'c')) {
                 println("breakpoint!")
@@ -109,15 +112,20 @@ object Solution {
             val path = findShortestPath(curPos, key.key.pos, map)
             val steps = path.size
 //            var step = 1
-//            println("Checking if globalCheapest contains ${Pair(curPos, keysInHand.map { it.key }.sorted())}")
-//            for (c in path) {
-//                val existingValue = globalCheapest[Pair(c, keysInHand.toSet())]
-//                if (!keysInHand.isEmpty() && existingValue != null && existingValue.first <= (curCost + step++)) {
-//                    println("We've been at position $curPos before and had the same keys: ${keysInHand.map { it.key }}, with a lower current " +
-//                            "cost (${existingValue.first} vs ${curCost + step}), returning early.")
-//                    return existingValue.second
-//                }
-//            }
+//            println("Checking if path to ${key.key.key} steps over some other key.")
+            var steppingOverKey = false
+            for (c in path) {
+                if (map[c].toString().matches(Regex("[a-z]"))) {
+                    val steppedKey = map[c]!!
+                    if (steppedKey != key.key.key && !keysInHandAsChars.contains(steppedKey)) {
+//                        println("On the way to ${key.key.key} we're stepping over stepped key.")
+                        steppingOverKey = true
+                    }
+                }
+            }
+            if (steppingOverKey) {
+                continue
+            }
 //            println("Steps to get key ${key.key}: $steps")
             val cost = findCheapestCostToGetAllKeys(allKeys, map, deps, start, keysInHand + key.key, key.key.pos, curCost + steps, cfsf)
             if (cost < cfsf) {

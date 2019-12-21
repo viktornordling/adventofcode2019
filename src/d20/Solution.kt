@@ -164,17 +164,23 @@ object Solution {
         for (teleporterNeighbor: Pos3 in teleporterNeighbors) {
             val teleporter = posToTeleporter[teleporterNeighbor.copy(level = 0)]
             if (teleporter != null) {
+                println("Teleporter name: ${teleporter.name}")
                 val other = otherSideOfTeleporter(teleporterNeighbor, teleporter, map)
                 if (other.level >= 0) {
                     teleporterPositions.add(other)
                 }
             }
         }
+        if (teleporterPositions.isNotEmpty()) {
+            println("Teleporter neighbours of $pos is $teleporterPositions")
+        }
 
         return opens.toSet() + teleporterPositions.toSet()
     }
 
-    fun h(start: Pos3, end: Pos3):Int = 0
+//    fun h(start: Pos3, end: Pos3):Int = 0
+
+    fun h(start: Pos3, end: Pos3):Int = (start.level - end.level) * (start.level - end.level) * (start.level - end.level)
 
     fun reconstructPath(cameFrom: MutableMap<Pos3, Pos3>, current: Pos3):List<Pos3> {
         val path = mutableListOf(current)
