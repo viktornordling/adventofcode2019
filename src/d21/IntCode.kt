@@ -1,45 +1,114 @@
-package d17
+package d21
 
 
-import util.Pos
 import util.Reader
-import util.Surface
 import java.math.BigInteger
 import java.util.*
 
-data class Move(val direction: Char, val count: Int) {
-    override fun toString(): String {
-        return "$direction,$count"
-    }
-}
-
 object IntCode {
+
     fun solve() {
-        val input = Reader.readInput("easy.txt")
+        val input = Reader.readInput("input.txt")
         val values = input.flatMap { it.split(",").map { it.toLong() } }
-        val solutionA = runProgramWithInput(values, BigInteger.valueOf(2L))
-        println("Solution for A: $solutionA")
+
+//        val allPrograms = generateAllPrograms(16, 4)
+//        for (p in allPrograms) {
+//            println("Running program $p")
+//            val inputs = p.flatMap { it.map { it.toInt() } + 10 }
+//            val program = inputs + "WALK".map { it.toInt() } + 10
+//
+//            val inputQueue: Queue<Int> = LinkedList<Int>()
+//            inputQueue.addAll(program)
+//
+//            runProgramWithInput(values, inputQueue)
+//        }
+//
+
+        val input1 = "NOT A T".map { it.toInt() } + 10
+        val input2 = "NOT B J".map { it.toInt() } + 10
+        val input3 = "OR T J".map { it.toInt() } + 10
+        val input4 = "NOT C T".map { it.toInt() } + 10
+        val input5 = "OR T J".map { it.toInt() } + 10
+        val input6 = "AND D J".map { it.toInt() } + 10
+        val input7 = "NOT E T".map { it.toInt() } + 10
+        val input8 = "NOT T T".map { it.toInt() } + 10
+        val input9 = "OR H T".map { it.toInt() } + 10
+        val input10 = "AND T J".map { it.toInt() } + 10
+
+
+        // THIS WORKED FOR PART 1!
+//        val input1 = "OR A T".map { it.toInt() } + 10
+//        val input2 = "AND B T".map { it.toInt() } + 10
+//        val input3 = "NOT B J".map { it.toInt() } + 10
+//        val input4 = "OR J T".map { it.toInt() } + 10
+//        val input5 = "NOT C J".map { it.toInt() } + 10
+//        val input6 = "AND T J".map { it.toInt() } + 10
+//        val input7 = "AND D J".map { it.toInt() } + 10
+//        val input8 = "NOT A T".map { it.toInt() } + 10
+//        val input9 = "OR T J".map { it.toInt() } + 10
+
+//        val input10 = "NOT E T".map { it.toInt() } + 10
+//        val input11 = "AND F T".map { it.toInt() } + 10
+//        val input12 = "OR T J".map { it.toInt() } + 10
+//
+        val input16 = "RUN".map { it.toInt() } + 10
+        val inputs = input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input16
+//        val inputs = input1 + input2 + input3 + input4 + input5 + input6 + input16
+        val inputQueue: Queue<Int> = LinkedList<Int>()
+        inputQueue.addAll(inputs)
+//
+        runProgramWithInput(values, inputQueue)
     }
 
-    private fun runProgramWithInput(immutableValues: List<Long>, input: BigInteger): Long {
+    private fun generateAllPrograms(max: Int, listLength: Int): MutableList<MutableList<String>> {
+        val allPrograms = mutableListOf<MutableList<String>>()
+        for (i in 0 until max) {
+            val booleans: List<Boolean> = i.toString(2).map { it == '1' }
+            val fullList = mutableListOf<Boolean>()
+            for (j in 0 until (listLength - booleans.size)) {
+                fullList.add(false)
+            }
+            fullList.addAll(booleans)
+            val p = createProgram(fullList)
+            println(p)
+            allPrograms.add(p)
+        }
+        return allPrograms
+    }
+
+    private fun createProgram(listOf: List<Boolean>): MutableList<String> {
+        var first = true
+        val instructions = mutableListOf<String>()
+        var currentChar = 'A'
+        for (b in listOf) {
+            if (first) {
+                if (b) {
+                    instructions.add("OR A J")
+                } else {
+                    instructions.add("NOT A J")
+                }
+                first = false
+            } else {
+                if (b) {
+                    instructions.add("AND $currentChar J")
+                } else {
+                    instructions.add("OR $currentChar T")
+                    instructions.add("AND T J")
+                }
+            }
+            currentChar++
+        }
+        return instructions
+    }
+
+    private fun runProgramWithInput(immutableValues: List<Long>, inputQueue: Queue<Int>): Long {
         var relativeBase = BigInteger.ZERO
         val values: MutableMap<BigInteger, BigInteger> = immutableValues.toMutableList().mapIndexed { index: Int, it: Long -> BigInteger.valueOf(index.toLong()) to BigInteger.valueOf(it) }.toMap().toMutableMap()
-        values[0.toBigInteger()] = 2.toBigInteger()
-        val map = mutableMapOf<Pos, Char>()
-        var x = 0
-        var y = 0
+//        values[0.toBigInteger()] = 2.toBigInteger()
         val outputs = mutableListOf<Int>()
         var currentPos = BigInteger.ZERO
 
-        val input1 = "A,C,A,C,B,C,B,A,B,B".toCharArray().map { it.toInt() } + 10
-        val input2 = "R,12,L,10,L,10".toCharArray().map { it.toInt() } + 10
-        val input3 = "L,12,R,12,L,6".toCharArray().map { it.toInt() } + 10
-        val input4 = "L,6,L,12,R,12,L,4".toCharArray().map { it.toInt() } + 10
-        val input5 = "WALK".toCharArray().map { it.toInt() } + 10
-        val inputs = input1 + input2 + input3 + input4 + input5
-        val inputQueue:Queue<Int> = LinkedList<Int>()
-        inputQueue.addAll(inputs)
-
+        var curInput = 0
         while (true) {
             var jump = false
             var jumps = 4
@@ -70,11 +139,12 @@ object IntCode {
                 }
                 values[dest] = a.multiply(b)
             } else if (opCode == 3L) {
-                println("reading input")
+//                println("reading input")
                 var inp = inputQueue.poll()
+//                var inp = inputs[curInput++]
                 val addr1 = values[currentPos.add(BigInteger.ONE)]!!
 //                val a = getValue(addr1, values, mode1, relativeBase)
-                println("providing input $inp")
+//                println("providing input $inp")
                 if (mode1 == 2) {
                     values[relativeBase + addr1] = inp.toBigInteger()
                 } else if (mode1 == 0) {
@@ -86,18 +156,16 @@ object IntCode {
             } else if (opCode == 4L) {
                 val addr1 = values[currentPos.add(BigInteger.ONE)]!!
                 val output = getValue(addr1, values, mode1, relativeBase)
-//                outputs.add(output.toInt())
                 if (output > 200.toBigInteger()) {
                     println("Final output: $output")
                 } else if (output == 10.toBigInteger()) {
                     println()
-                    x = 0
-                    y++
                 } else {
-                    map[Pos(x, y)] = output.toInt().toChar()
                     print(output.toInt().toChar())
-                    x++
                 }
+//                outputs.add(output.toInt())
+//                val pos = Pos(inputs[curInput - 2], inputs[curInput - 1])
+//                println(output)
                 jumps = 2
             } else if (opCode == 5L) {
                 val addr1 = values[currentPos.add(BigInteger.ONE)]!!
@@ -160,9 +228,6 @@ object IntCode {
                 relativeBase = relativeBase.add(a)
                 jumps = 2
             } else if (opCode == 99L!!) {
-                findAlignmentParameter(map)
-                val movements = getMovements(map)
-                println(movements.joinToString(separator = ","))
                 return 0L
             } else {
                 println("Unknown op: $op")
@@ -173,71 +238,6 @@ object IntCode {
             }
         }
     }
-
-    fun findAlignmentParameter(map: MutableMap<Pos, Char>) {
-        val intersections = map.entries.filter { it.value == '#' && it.key.neighbours().all { n -> map[n]?.equals('#') ?: false } }
-        println(intersections.map { it.key.x * it.key.y }.sum())
-    }
-
-    fun getMovements(map: MutableMap<Pos, Char>): List<Move> {
-        val startPos = findStartPos(map)
-        var direction = 'R'
-        var curPos = startPos
-        val moves = mutableListOf<Move>()
-        var steps = 0
-        var turnName = 'R'
-        while (direction != '?') {
-            map[curPos] = direction
-            val nextPos = map[curPos.next(direction)] ?: '.'
-            if (nextPos == '.') {
-                // Turn!
-                moves.add(Move(turnName, steps))
-                steps = 0
-                val nextPos: Pos? = curPos.neighbours().filter { map[it] == '#' }.firstOrNull()
-                if (nextPos == null) {
-                    println("Done!")
-                    Surface.printMap(map)
-                    return moves
-                }
-                val oldDirection = direction
-                direction = getNextDir(curPos, nextPos)
-                turnName = getTurnName(oldDirection, direction)
-            }
-            curPos = curPos.next(direction)
-            steps++
-        }
-        return moves
-    }
-
-    fun getTurnName(oldDirection: Char, newDirection: Char): Char {
-        return when {
-            oldDirection == 'U' && newDirection == 'R' -> 'R'
-            oldDirection == 'U' && newDirection == 'L' -> 'L'
-
-            oldDirection == 'D' && newDirection == 'R' -> 'L'
-            oldDirection == 'D' && newDirection == 'L' -> 'R'
-
-            oldDirection == 'L' && newDirection == 'U' -> 'R'
-            oldDirection == 'L' && newDirection == 'D' -> 'L'
-
-            oldDirection == 'R' && newDirection == 'U' -> 'L'
-            oldDirection == 'R' && newDirection == 'D' -> 'R'
-
-            else -> throw IllegalArgumentException("Can't turn from $oldDirection to $newDirection")
-        }
-    }
-
-    fun getNextDir(curPos: Pos, nextPos: Pos): Char {
-        return when {
-            nextPos.x > curPos.x -> 'R'
-            nextPos.x < curPos.x -> 'L'
-            nextPos.y < curPos.y -> 'U'
-            nextPos.y > curPos.y -> 'D'
-            else -> throw IllegalArgumentException("No will get you to $nextPos from $curPos")
-        }
-    }
-
-    fun findStartPos(map: MutableMap<Pos, Char>) = map.filter { it.value == '^' }.keys.first()!!
 
     fun getMode(op: BigInteger, num: Int): Int {
         val chars = op.toString().toCharArray().reversed().drop(2)
@@ -268,6 +268,8 @@ object IntCode {
         val chars = pos.toString().toCharArray().reversed().take(2).reversed().toCharArray()
         return String(chars).toLong()
     }
+
+
 }
 
 fun main() {

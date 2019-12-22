@@ -1,0 +1,237 @@
+
+@ABCDEFGHI
+################
+
+@ABCDEFGHI
+#.#############
+
+@ABCDEFGHHI
+##.############
+
+@ABCDEFGHI
+###.#.#.#.#####
+
+if !A => JUMP ALWAYS
+
+if !D => NEVER JUMP
+
+!A &B &C &D
+
+....@ABCD........ <- jump here
+#####.###########
+
+A & B & !C & D
+
+..@.............. <- jump here
+###AB.D##########
+
+A & !B & !C & D
+
+...@ABCD......... <- jump here
+#####..#.########
+
+A & !B & !C & D
+
+...@............. <- jump here
+####A..D#########
+
+!A & !B & !C & D
+
+....@............ <- jump here
+#####...D########
+
+(D & !C & (!B || (A & B))) || !A
+
+OR A T
+AND B T
+NOT B J
+OR J T
+NOT C J
+AND T J
+AND D J
+NOT A T
+OR T J
+
+NOT E T
+AND F T
+OR T J
+
+.................
+.................
+.......@ABCD.....
+#####..#.########
+
+......@ABCDEFGHIJ
+#####.##.##.#.###
+
+A = false
+B = true
+C = true
+D = true
+
+T = false
+T = false
+J = false
+
+.................
+.................
+..@ABCDEFGHI..... (jumps, which is OK)
+#####.##.##.#.###
+
+with 4 vision
+.................
+.................
+......@ABCD......
+#####.##.##??????
+
+.................
+.................
+......@ABCDEFGHI. (should've jumped here) !B and !E
+#####.##.##.#.###
+
+.................
+.................
+.......@ABCDEFGHI (should've jumped one back)
+#####.##.##.#.###
+
+JUMPED here because !E & F = true
+.................
+.................
+..@ABCDEF........
+#####.X.#########
+
+.................
+.................
+......@ABCD......
+#####.##.##.#.###
+
+((D & !C & (!B || (A & B))) || !A) | (A & B &!C &D)
+
+!B
+
+....@ABCD........
+#####..#.########
+
+!A => hoppa
+!B => hoppa
+!C => hoppa
+!D => hoppa inte!
+
+..@ABCD.......... <- Don't jump!
+#####.#.#...#.###
+
+..@ABCD.......... <- JUMP!
+#####.#..########
+
+..@ABCD..........
+#####.#.#...#.###
+
+..@ABCD..........
+#####.#..########
+
+(!A || !B !C) && D && !(!E && !H)
+
+NOT A T
+NOT B J
+OR T J
+NOT C T
+OR T J
+AND D J
+
+NOT E T
+NOT T T
+OR H T
+AND T J
+
+H     E = !H & !E !(!H &!E)
+0     0 = 1       0
+0     1 = 0       1
+1     0 = 0       1
+1     1 = 0       1
+
+H & E
+0   0 = 0
+0   1 = 0
+1   0 = 0
+1   1 = 1
+
+
+E H =
+0 0 0
+0 1 1
+1 0 1
+1 1 1
+
+..@ABCDEFGHI..... <- DON'T JUMP
+#####.#.#...#.###
+
+....@ABCDEFGHI... <- JUMP
+#####.#.#...#.###
+
+(!A || !B || !C) && D
+NOT A T
+NOT B J
+OR T J
+NOT C T
+OR T J
+AND D J
+
+
+A = 0
+
+
+T = 1
+J = 1
+
+
+
+NOT A J
+NOT D T
+
+OR A T
+AND B T
+NOT B J
+OR J T
+NOT C J
+AND T J
+AND D J
+NOT A T
+OR T J
+
+
+A = true
+B = true
+C = true
+D = true
+
+OR A T
+OR B T
+OR C T
+OR D T
+OR T J
+
+A = true
+B = true
+C = true
+D = false
+
+A = true
+B = true
+C = false
+D = true
+
+A = true
+B = true
+C = false
+D = false
+
+A = false
+B = false
+C = false
+D = false
+
+NOT A T
+NOT B J
+AND T J
+NOT C J
+AND D J
