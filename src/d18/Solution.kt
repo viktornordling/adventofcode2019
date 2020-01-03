@@ -11,8 +11,7 @@ data class Dependency(val key: Key, val neededKeys: Set<Key>)
 
 object Solution {
 
-    val globalCheapest: MutableMap<Pair<Pos, Set<Key>>, Pair<Int, Int>> = mutableMapOf()
-    val globalCheapestKeyCount: MutableMap<Int, Int> = mutableMapOf()
+    val globalCheapest: MutableMap<Pair<Pos, Set<Key>>, Int> = mutableMapOf()
     var globalCounter = BigInteger.ZERO
 
     fun solve() {
@@ -34,115 +33,59 @@ object Solution {
         val doors = findDoors(map)
 
         val dependencies = createDependencies(keys, doors, map, startPos)
-        val cost = findCheapestCostToGetAllKeys(keys, map, dependencies, startPos, emptyList(), startPos, 0, 999999)
+        val keyToKeyCost: Map<Pair<Pos, Pos>, Int> = createKeyToKeyCosts(startPos, keys, map)
+
+        val cost = findCheapestCostToGetAllKeys(keyToKeyCost, keys, map, dependencies, startPos, emptyList(), startPos)
         println(cost)
     }
 
     fun findCheapestCostToGetAllKeys(
+        keyToKeyCost: Map<Pair<Pos, Pos>, Int>,
         allKeys: Set<Key>,
         map: MutableMap<Pos, Char>,
         deps: MutableSet<Dependency>,
         start: Pos,
         keysInHand: List<Key>,
-        curPos: Pos, curCost: Int,
-        cheapestFoundSoFar: Int): Int {
+        curPos: Pos): Int {
         globalCounter++
-        val keysInHandAsChars = keysInHand.map { it.key }.toSet()
-        if (globalCounter % 1000.toBigInteger() == 0.toBigInteger()) {
-            println("1000 iterations. Current keys in hand: ${keysInHand.map { it.key }.sorted()}. Current pos: ${curPos} Best so far: ${cheapestFoundSoFar}")
-            println("1000 iterations. Current keys in hand in order: ${keysInHand.map { it.key }}. Current pos: ${curPos} Best so far: ${cheapestFoundSoFar}")
-        }
         val existingValue = globalCheapest[Pair(curPos, keysInHand.toSet())]
         if (!keysInHand.isEmpty() && existingValue != null) {
-            if (existingValue.first <= (curCost)) {
-//                println("Reusing existing value: $existingValue for key ${Pair(curPos, keysInHand.map { it.key }.sorted())}")
-                return existingValue.second
-            } else {
-//                println("We've been here before, but last time at a higher cost: last time: ${existingValue.first}, this time: ${curCost}")
-            }
-        } else {
-//            println("Not reusing existing value for key ${Pair(curPos, keysInHand.map { it.key }.sorted())}")
-            globalCheapest[Pair(curPos, keysInHand.toSet())] = Pair(curCost, 99999)
-            if (curPos == Pos(15, 3)) {
-//                println("DUUUDE, putting ${keysInHand.map { it.key }.sorted()} into the map for pos $curPos!")
-            }
-        }
-//        println("Current keys in hand: ${keysInHand.map { it.key }}")
-//        if (curCost == 136) {
-//            return curCost
-//        }
-        if (curCost >= cheapestFoundSoFar) {
-            return cheapestFoundSoFar
+            return existingValue
         }
         if (keysInHand.size == allKeys.size) {
-//            println("Found all keys! key order: ${keysInHand.map { it.key }}. Total steps: $curCost")
-            // Found all keys, mark the path that got us here
-            var cp = start
-            var steps = 1
-            val keys = mutableSetOf<Key>()
-            for (key in keysInHand) {
-                val p = findShortestPath(cp, key.pos, map)
-                for (c in p) {
-                    globalCheapest[Pair(c, keys)] = Pair(steps++, curCost)
-                }
-                keys.add(key)
-                cp = key.pos
-            }
-            return curCost
+            return 0
         }
-        var cfsf = cheapestFoundSoFar
+        var cfsf = 999999
         val keysWithNoDeps: List<Dependency> = findKeysWithNoDeps(deps, map, keysInHand.toSet()).filter { !keysInHand.contains(it.key) }
 
-//        val keyToPathLength = mutableMapOf<Key, Int>()
-//        for (key in keysWithNoDeps) {
-//            val path = findShortestPath(curPos, key.key.pos, map)
-//            keyToPathLength[key.key] = path.size
-//        }
-//        val sorted = keysWithNoDeps.sortedBy { findShortestPath(curPos, it.key.pos, map).size }
-
-//        val keyToShortest = mutableMapOf<Key, Int>()
-//        for (key in sorted) {
-        println("We have ${keysWithNoDeps.size} keys we can grab")
         for (key in keysWithNoDeps) {
-            if (keysInHand.map { it.key }.toSet() == setOf('a', 'b', 'c')) {
-                println("breakpoint!")
-            }
-//            println("Getting key ${key.key.key}")
-            // Get the key and then call ourselves recursively
-            val path = findShortestPath(curPos, key.key.pos, map)
-            val steps = path.size
-//            var step = 1
-//            println("Checking if path to ${key.key.key} steps over some other key.")
-            var steppingOverKey = false
-            for (c in path) {
-                if (map[c].toString().matches(Regex("[a-z]"))) {
-                    val steppedKey = map[c]!!
-                    if (steppedKey != key.key.key && !keysInHandAsChars.contains(steppedKey)) {
-//                        println("On the way to ${key.key.key} we're stepping over stepped key.")
-                        steppingOverKey = true
-                    }
-                }
-            }
-            if (steppingOverKey) {
-                continue
-            }
-//            println("Steps to get key ${key.key}: $steps")
-            val cost = findCheapestCostToGetAllKeys(allKeys, map, deps, start, keysInHand + key.key, key.key.pos, curCost + steps, cfsf)
+            val costToKey = keyToKeyCost[Pair(curPos, key.key.pos)]!!
+            val cost = costToKey + findCheapestCostToGetAllKeys(keyToKeyCost, allKeys, map, deps, start, keysInHand + key.key, key.key.pos)
             if (cost < cfsf) {
-                val p = findShortestPath(curPos, key.key.pos, map)
-                globalCheapest[Pair(key.key.pos, keysInHand.toSet() + key.key)] = Pair(curCost + p.size, cost)
-//                val p = findShortestPath(curPos, key.key.pos, map)
-//                var steps2 = 1
-//                for (c in p) {
-//                    globalCheapest[Pair(c, keysInHand.toSet())] = Pair(curCost + steps2++, cost)
-//                }
-                println("Found one path: $cost, key order: ${keysInHand.map { it.key } + key.key.key}")
                 cfsf = cost
             }
-//            keyToShortest[key.key] = cost
         }
+        globalCheapest[Pair(curPos, keysInHand.toSet())] = cfsf
         return cfsf
-//        return keyToShortest.minBy { it.value }!!.value
+    }
+
+    private fun createKeyToKeyCosts(start: Pos, keys: Set<Key>, map: MutableMap<Pos, Char>): Map<Pair<Pos, Pos>, Int> {
+        val costs = mutableMapOf<Pair<Pos, Pos>, Int>()
+        for (key in keys) {
+            for (otherKey in keys) {
+                if (key != otherKey) {
+                    val path = findShortestPath(key.pos, otherKey.pos, map)
+                    costs[Pair(key.pos, otherKey.pos)] = path.size
+                }
+            }
+        }
+
+        for (key in keys) {
+            val path = findShortestPath(start, key.pos, map)
+            costs[Pair(start, key.pos)] = path.size
+        }
+
+        return costs.toMap()
     }
 
     fun findKeysWithNoDeps(deps: MutableSet<Dependency>, map: MutableMap<Pos, Char>, keysInHand: Set<Key>): List<Dependency> {
