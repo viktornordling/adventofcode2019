@@ -1,7 +1,6 @@
 package d24
 
 import util.Pos
-import util.Surface
 import java.io.File
 import java.math.BigInteger
 
@@ -44,7 +43,7 @@ object Solution {
         }
 
         val bugCount = maps.flatMap { it.value.map { char -> char.value } }.filter { it == '#' }.count()
-        println("Bug count after 10 iterations: $bugCount")
+        println("Bug count after 200 iterations: $bugCount")
     }
 
     private fun bioRating(map: MutableMap<Pos, Char>, cols: Int): BigInteger {
@@ -55,7 +54,6 @@ object Solution {
             val index = pos.y * cols + pos.x
             if (char == '#') {
                 val cellRating = BigInteger.valueOf(2).pow(index)
-//                println("index = $index, cellRating = $cellRating")
                 bioRating += cellRating
             }
         }
@@ -168,7 +166,7 @@ object Solution {
 
 fun main() {
     val start = System.currentTimeMillis()
-//    Solution.solvePartOne()
+    Solution.solvePartOne()
     Solution.solvePartTwo()
     println("Millis taken: ${System.currentTimeMillis() - start}")
 }
