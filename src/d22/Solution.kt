@@ -107,43 +107,73 @@ cut 921
 deal with increment 8
 cut -3094
         """.trimIndent()
-        val deckSize: BigInteger = BigInteger("119315717514047")
-        val shuffles = input.lines().reversed()
+        val deckSize = BigInteger("119315717514047")
+        val shuffles = input.lines()
 //        val cardWeAreLookingFor = 2019
 //        for (i in 0 until deckSize) {
-        var posWeCareAbout = 2020.toBigInteger()
-        val seens = mutableSetOf<BigInteger>()
-        for (i in 1..100) {
-            val start = posWeCareAbout
-            for (shuffle in shuffles) {
-                if (shuffle.startsWith("deal with increment")) {
-                    val increment = shuffle.split(" ").last().toBigInteger()
-                    posWeCareAbout = cardInPositionBeforeDeal(posWeCareAbout, increment, deckSize)
-                } else if (shuffle.startsWith("deal into new stack")) {
-                    posWeCareAbout = cardInPositionBeforeDealingIntoNewStack(posWeCareAbout, deckSize)
-                } else if (shuffle.startsWith("cut")) {
+//        var posWeCareAbout = 2020.toBigInteger()
+//        val seenPositions = mutableSetOf<BigInteger>()
+        var increment = BigInteger.ONE
+        var offset = BigInteger.ZERO
+        for (shuffle in shuffles) {
+            when {
+                shuffle.startsWith("deal with increment") -> {
+                    val dealIncrement = shuffle.split(" ").last().toBigInteger()
+                    increment *= inv(dealIncrement, deckSize)
+                    increment %= deckSize
+//                        posWeCareAbout = cardInPositionBeforeDeal(posWeCareAbout, increment, deckSize)
+                }
+                shuffle.startsWith("deal into new stack") -> {
+                    increment *= BigInteger.valueOf(-1)
+                    offset += increment
+                    increment %= deckSize
+                    offset %= deckSize
+//                        posWeCareAbout = cardInPositionBeforeDealingIntoNewStack(posWeCareAbout, deckSize)
+                }
+                shuffle.startsWith("cut") -> {
                     val cutPos = shuffle.split(" ").last().toBigInteger()
-                    posWeCareAbout = cardInPositionBeforeCut(posWeCareAbout, cutPos, deckSize)
+                    offset += increment * cutPos
+                    offset %= deckSize
+//                        posWeCareAbout = cardInPositionBeforeCut(posWeCareAbout, cutPos, deckSize)
                 }
             }
-            if (i < 10) {
-                println(posWeCareAbout)
-            }
-            val beforeDeal = cardInPositionBeforeDeal(posWeCareAbout, start, deckSize)
-            println("Start pos: $start, end pos: $posWeCareAbout, diff: ${posWeCareAbout - start}, beforeDeal = $beforeDeal")
-            if (seens.contains(posWeCareAbout)) {
-                println("Already seen $posWeCareAbout. Iterations: $i")
+        }
+        // After one shuffle, the increment and offset are known. After 101741582076661 shuffles, the increment will be
+        val numShuffles = BigInteger("101741582076661")
+        val oneShuffleIncrement = increment
+        val oneShuffleOffset = offset
+        increment = oneShuffleIncrement.modPow(numShuffles, deckSize)
+        offset = oneShuffleOffset * (BigInteger.ONE - oneShuffleIncrement.modPow(numShuffles, deckSize)) * inv(BigInteger.ONE - oneShuffleIncrement, deckSize)
+
+//            val beforeDeal = cardInPositionBeforeDeal(posWeCareAbout, start, deckSize)
+//            println("Start pos: $start, end pos: $posWeCareAbout, diff: ${posWeCareAbout - start}, beforeDeal = $beforeDeal")
+//            if (seenPositions.contains(posWeCareAbout)) {
+//                println("Already seen $posWeCareAbout. Iterations: $i")
+//                return
+//            }
+
+//            seenPositions.add(posWeCareAbout)
+
+        if (offset < BigInteger.ZERO) {
+            offset += deckSize
+        }
+        var curCard = offset
+        for (i in 0..2020) {
+            if (i == 2020) {
+                print("Part 2: $curCard")
                 return
             }
-
-            seens.add(posWeCareAbout)
+            curCard += increment
+            curCard %= deckSize
+            if (curCard < BigInteger.ZERO) {
+                curCard += deckSize
+            }
         }
-        println()
     }
 
-    fun cardInPositionBeforeDealingIntoNewStack(pos: BigInteger, deckSize: BigInteger) = deckSize - pos - BigInteger.ONE
+    private fun cardInPositionBeforeDealingIntoNewStack(pos: BigInteger, deckSize: BigInteger) = deckSize - pos - BigInteger.ONE
 
-    fun cardInPositionBeforeCut(pos: BigInteger, cutPos: BigInteger, deckSize: BigInteger): BigInteger {
+    private fun cardInPositionBeforeCut(pos: BigInteger, cutPos: BigInteger, deckSize: BigInteger): BigInteger {
         return when {
             cutPos > BigInteger.ZERO -> (pos + cutPos) % deckSize
             cutPos < BigInteger.ZERO -> (pos + cutPos + deckSize) % deckSize
@@ -151,11 +181,14 @@ cut -3094
         }
     }
 
-    fun cardInPositionBeforeDeal(pos: BigInteger, increment: BigInteger, deckSize: BigInteger): BigInteger {
+    private fun inv(n: BigInteger, deckSize: BigInteger): BigInteger {
+        return n.modInverse(deckSize)
+    }
+
+    private fun cardInPositionBeforeDeal(pos: BigInteger, increment: BigInteger, deckSize: BigInteger): BigInteger {
         // (x * a) % b = c
         // 4 * 3 % 10 = 2
-        //
-        val (s, t) = extended_gcd(increment, deckSize)
+        val (s, _) = extendedGcd(increment, deckSize)
         val r = (pos * s) % deckSize
         return when {
             r < 0.toBigInteger() -> r + deckSize
@@ -163,35 +196,33 @@ cut -3094
         }
     }
 
-    fun extended_gcd(a: BigInteger, b: BigInteger): Pair<BigInteger, BigInteger> {
+    private fun extendedGcd(a: BigInteger, b: BigInteger): Pair<BigInteger, BigInteger> {
         var s = BigInteger.ZERO
         var t = BigInteger.ONE
-        var old_s = BigInteger.ONE
-        var old_t = BigInteger.ZERO
+        var oldS = BigInteger.ONE
+        var oldT = BigInteger.ZERO
         var r = b
-        var old_r = a
+        var oldR = a
 
         while (r != 0.toBigInteger()) {
-            val quotient = old_r / r
+            val quotient = oldR / r
 
-            val temp_old_r = r
-            r = old_r - quotient * r
-            old_r = temp_old_r
+            val tempOldR = r
+            r = oldR - quotient * r
+            oldR = tempOldR
 
-            val temp_old_s = s
-            s = old_s - quotient * s
-            old_s = temp_old_s
+            val tempOldS = s
+            s = oldS - quotient * s
+            oldS = tempOldS
 
-            val temp_old_t = t
-            t = old_t - quotient * t
-            old_t = temp_old_t
+            val tempOldT = t
+            t = oldT - quotient * t
+            oldT = tempOldT
         }
-        return Pair(old_s, old_t)
+        return Pair(oldS, oldT)
     }
 }
 
 fun main() {
-    val start = System.currentTimeMillis()
     Solution.solve()
-    println("Millis taken: ${System.currentTimeMillis() - start}")
 }
