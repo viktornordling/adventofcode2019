@@ -10,18 +10,15 @@ object Solution {
         val input = Reader.readInput("easy.txt")
         val orbits: List<Orbit> = input.map { parse(it) }
         val grouped: Map<String, List<Orbit>> = orbits.groupBy { it.b }
-        val planetToParentCount: MutableMap<String, Int> = mutableMapOf()
         val planets: Set<String> = orbits.flatMap { setOf(it.a, it.b) }.toSet()
+        val planetToParentCount: Map<String, Int> = planets.associateWith { findAncestors(it, grouped).size }
 
-        for (planet in planets) {
-            planetToParentCount[planet] = findAncestors(planet, grouped).size
-        }
-        println("A: ${planetToParentCount.values.sum()}")
+        println("Part 1: ${planetToParentCount.values.sum()}")
 
         // Find shortest path from 785 to D1K
         val adjacencyMap = createAdjacencyMap(orbits)
-        val shortestPath = findShortestPath("785", "D1K", adjacencyMap)
-        println("B: $shortestPath")
+        val shortestPath = findShortestPath("K", "I", adjacencyMap)
+        println("Part 2: $shortestPath")
     }
 
     fun findShortestPath(cur: String, end: String, adjacencyMap: Map<String, Set<String>>, curSteps: Int = 0, seen: Set<String> = emptySet()): Int {
